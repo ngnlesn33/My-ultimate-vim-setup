@@ -1,4 +1,5 @@
 ---@diagnostic disable: missing-fields
+local util = require("conform.util")
 
 return {
   -- tools
@@ -14,7 +15,7 @@ return {
         "tailwindcss-language-server",
         "typescript-language-server",
         "css-lsp",
-        "phpactor",
+        -- "phpactor",
         "intelephense",
       })
     end,
@@ -35,23 +36,57 @@ return {
         has = "definition",
       }
     end,
-    opts = {
-      inlay_hints = { enabled = true },
-      ---@type lspconfig.options
-      servers = {
+    opts = function(_, opts)
+      local vue_typescript_plugin = require("mason-registry").get_package("vue-language-server"):get_install_path()
+        .. "/node_modules/@vue/language-server"
+        .. "/node_modules/@vue/typescript-plugin"
+
+      opts.inlay_hints.enabled = false
+
+      opts.servers = vim.tbl_deep_extend("force", opts.servers, {
+        ---@type lspconfig.options
         cssls = {},
-        -- phpactor = {},
-        intelephense = {},
-        tailwindcss = {
+        intelephense = {
           root_dir = function(...)
-            return require("lspconfig.util").root_pattern(".git")(...)
+            return require("lspconfig.util").root_pattern("composer.json", ".git")(...)
           end,
+          settings = {
+            intelephense = {
+              filetypes = { "php", "blade" },
+              files = {
+                associations = { "*.php", "*.blade.php" }, -- Associating .blade.php files as well
+                maxSize = 5000000,
+              },
+              format = {
+                enable = true,
+              },
+            },
+          },
         },
         tsserver = {
-          root_dir = function(...)
-            return require("lspconfig.util").root_pattern(".git")(...)
-          end,
-          single_file_support = false,
+          root_dir = require("lspconfig.util").root_pattern("package.json", "tsconfig.json", "jsconfig.json", ".git"),
+
+          single_file_support = true,
+          init_options = {
+            plugins = {
+              -- Use typescript language server along with vue typescript plugin
+              {
+                name = "@vue/typescript-plugin",
+                location = vue_typescript_plugin,
+                -- languages = { "javascript", "typescript", "vue" },
+                languages = { "vue" },
+              },
+            },
+          },
+          filetypes = {
+            "javascript",
+            "javascriptreact",
+            "javascript.jsx",
+            "typescript",
+            "typescriptreact",
+            "typescript.tsx",
+            "vue",
+          },
           settings = {
             typescript = {
               inlayHints = {
@@ -77,6 +112,7 @@ return {
             },
           },
         },
+        volar = {},
         html = {},
         yamlls = {
           settings = {
@@ -150,17 +186,100 @@ return {
             },
           },
         },
+      })
+    end,
+  },
+  -- Laravel setup
+  {
+    "adalessa/laravel.nvim",
+    dependencies = {
+      "nvim-telescope/telescope.nvim",
+      "tpope/vim-dotenv",
+      "MunifTanjim/nui.nvim",
+      -- "nvimtools/none-ls.nvim",
+    },
+    cmd = { "Sail", "Artisan", "Composer", "Npm", "Yarn", "Laravel" },
+    keys = {
+      { "<leader>la", ":Laravel artisan<cr>" },
+      { "<leader>lr", ":Laravel routes<cr>" },
+      { "<leader>lm", ":Laravel related<cr>" },
+    },
+    event = { "VeryLazy" },
+    opts = {
+      features = {
+        null_ls = {
+          enable = false,
+        },
       },
-      setup = {},
     },
   },
   {
     "stevearc/conform.nvim",
-    optional = true,
-    opts = {
-      formatters_by_ft = {
-        php = { "php_cs_fixer" },
-      },
-    },
+    opts = function()
+      ---@class ConformOpts
+      local opts = {
+        -- LazyVim will use these options when formatting with the conform.nvim formatter
+        format = {
+          timeout_ms = 3000,
+          async = false, -- not recommended to change
+          quiet = false, -- not recommended to change
+        },
+        ---@type table<string, conform.FormatterUnit[]>
+        formatters_by_ft = {
+          lua = { "stylua" },
+          fish = { "fish_indent" },
+          sh = { "shfmt" },
+          ["php"] = { "pint" },
+          ["blade"] = { "blade-formatter", "rustywind" },
+          -- python = { "black" },
+          ["javascript"] = { "prettier" },
+          ["javascriptreact"] = { "prettier" },
+          ["typescript"] = { "prettier" },
+          ["typescriptreact"] = { "prettier" },
+          ["vue"] = { "prettier" },
+          ["css"] = { "prettier" },
+          ["scss"] = { "prettier" },
+          ["less"] = { "prettier" },
+          ["html"] = { "prettier" },
+          ["json"] = { "prettier" },
+          ["jsonc"] = { "prettier" },
+          ["yaml"] = { "prettier" },
+          ["markdown"] = { "prettier" },
+          ["markdown.mdx"] = { "prettier" },
+          ["graphql"] = { "prettier" },
+          ["handlebars"] = { "prettier" },
+        },
+        -- LazyVim will merge the options you set here with builtin formatters.
+        -- You can also define any custom formatters here.
+        ---@type table<string, conform.FormatterConfigOverride|fun(bufnr: integer): nil|conform.FormatterConfigOverride>
+        formatters = {
+          injected = { options = { ignore_errors = true } },
+          -- # Example of using dprint only when a dprint.json file is present
+          -- dprint = {
+          --   condition = function(ctx)
+          --     return vim.fs.find({ "dprint.json" }, { path = ctx.filename, upward = true })[1]
+          --   end,
+          -- },
+          --
+          -- # Example of using shfmt with extra args
+          -- shfmt = {
+          --   extra_args = { "-i", "2", "-ci" },
+          -- },
+          pint = {
+            meta = {
+              url = "https://github.com/laravel/pint",
+              description = "Laravel Pint is an opinionated PHP code style fixer for minimalists. Pint is built on top of PHP-CS-Fixer and makes it simple to ensure that your code style stays clean and consistent.",
+            },
+            command = util.find_executable({
+              vim.fn.stdpath("data") .. "/mason/bin/pint",
+              "vendor/bin/pint",
+            }, "pint"),
+            args = { "$FILENAME" },
+            stdin = false,
+          },
+        },
+      }
+      return opts
+    end,
   },
 }

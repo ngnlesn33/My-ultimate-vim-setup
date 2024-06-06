@@ -140,4 +140,9 @@ return {
       require("telescope").load_extension("file_browser")
     end,
   },
+  -- {
+  --   "folke/trouble.nvim",
+  --   dependencies = { "nvim-tree/nvim-web-devicons" },
+  --   opts = {},
+  -- },
 }

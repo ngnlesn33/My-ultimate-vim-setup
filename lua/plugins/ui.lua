@@ -54,9 +54,13 @@ return {
 
   {
     "rcarriga/nvim-notify",
-    opts = {
-      timeout = 5000,
-    },
+    config = function()
+      local notify = require("notify")
+      -- this for transparency
+      notify.setup({ background_colour = "#000000", timeout = 5000 })
+      -- this overwrites the vim notify function
+      vim.notify = notify.notify
+    end,
   },
 
   -- filename
