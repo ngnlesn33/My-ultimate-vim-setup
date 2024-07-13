@@ -215,6 +215,8 @@ return {
   },
   {
     "stevearc/conform.nvim",
+    lazy = true,
+    event = { "BufReadPre", "BufNewFile" },
     opts = function()
       ---@class ConformOpts
       local opts = {
@@ -229,7 +231,10 @@ return {
           lua = { "stylua" },
           fish = { "fish_indent" },
           sh = { "shfmt" },
-          ["php"] = { "pint" },
+          go = { "goimports", "gofumpt" },
+          -- ["php"] = { "pint" },
+          -- php = { "pint" },
+          ["php"] = { "php-cs-fixer" },
           ["blade"] = { "blade-formatter", "rustywind" },
           -- python = { "black" },
           ["javascript"] = { "prettier" },
@@ -253,6 +258,16 @@ return {
         -- You can also define any custom formatters here.
         ---@type table<string, conform.FormatterConfigOverride|fun(bufnr: integer): nil|conform.FormatterConfigOverride>
         formatters = {
+          ["php-cs-fixer"] = {
+            command = "php-cs-fixer",
+            args = {
+              "fix",
+              "--rules=@PSR12", -- Formatting preset. Other presets are available, see the php-cs-fixer docs.
+              "$FILENAME",
+            },
+            stdin = false,
+          },
+
           injected = { options = { ignore_errors = true } },
           -- # Example of using dprint only when a dprint.json file is present
           -- dprint = {
@@ -276,6 +291,34 @@ return {
             }, "pint"),
             args = { "$FILENAME" },
             stdin = false,
+          },
+        },
+        notify_on_error = true,
+      }
+      return opts
+    end,
+  },
+  {
+    "mfussenegger/nvim-lint",
+    optional = true,
+    opts = function()
+      local opts = {
+        events = { "BufWritePost", "BufReadPost", "InsertLeave" },
+        linters_by_ft = {
+          fish = { "fish" },
+          php = { "phpcs" },
+        },
+        -- LazyVim extension to easily override linter options
+        -- or add custom linters.
+        ---@type table<string,table>
+        linters = {
+          phpcs = {
+            cmd = "phpcs",
+            args = {
+              "--report=json",
+              "-q",
+              "--standard=PSR12",
+            },
           },
         },
       }
