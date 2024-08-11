@@ -86,6 +86,7 @@ return {
             "typescriptreact",
             "typescript.tsx",
             "vue",
+            "php",
           },
           settings = {
             typescript = {
@@ -190,36 +191,36 @@ return {
     end,
   },
   -- Laravel setup
-  {
-    "adalessa/laravel.nvim",
-    dependencies = {
-      "nvim-telescope/telescope.nvim",
-      "tpope/vim-dotenv",
-      "MunifTanjim/nui.nvim",
-      -- "nvimtools/none-ls.nvim",
-    },
-    cmd = { "Sail", "Artisan", "Composer", "Npm", "Yarn", "Laravel" },
-    keys = {
-      { "<leader>la", ":Laravel artisan<cr>" },
-      { "<leader>lr", ":Laravel routes<cr>" },
-      { "<leader>lm", ":Laravel related<cr>" },
-    },
-    event = { "VeryLazy" },
-    opts = {
-      features = {
-        null_ls = {
-          enable = false,
-        },
-      },
-    },
-  },
+  -- {
+  --   "adalessa/laravel.nvim",
+  --   dependencies = {
+  --     "nvim-telescope/telescope.nvim",
+  --     "tpope/vim-dotenv",
+  --     "MunifTanjim/nui.nvim",
+  --     -- "nvimtools/none-ls.nvim",
+  --   },
+  --   cmd = { "Sail", "Artisan", "Composer", "Npm", "Yarn", "Laravel" },
+  --   keys = {
+  --     { "<leader>la", ":Laravel artisan<cr>" },
+  --     { "<leader>lr", ":Laravel routes<cr>" },
+  --     { "<leader>lm", ":Laravel related<cr>" },
+  --   },
+  --   event = { "VeryLazy" },
+  --   opts = {
+  --     features = {
+  --       null_ls = {
+  --         enable = false,
+  --       },
+  --     },
+  --   },
+  -- },
   {
     "stevearc/conform.nvim",
     lazy = true,
     event = { "BufReadPre", "BufNewFile" },
     opts = function()
       ---@class ConformOpts
-      local opts = {
+      local default_format_opts = {
         -- LazyVim will use these options when formatting with the conform.nvim formatter
         format = {
           timeout_ms = 3000,
@@ -234,9 +235,8 @@ return {
           go = { "goimports", "gofumpt" },
           -- ["php"] = { "pint" },
           -- php = { "pint" },
-          ["php"] = { "php-cs-fixer" },
+          php = { "php-cs-fixer" },
           ["blade"] = { "blade-formatter", "rustywind" },
-          -- python = { "black" },
           ["javascript"] = { "prettier" },
           ["javascriptreact"] = { "prettier" },
           ["typescript"] = { "prettier" },
@@ -262,7 +262,7 @@ return {
             command = "php-cs-fixer",
             args = {
               "fix",
-              "--rules=@PSR12", -- Formatting preset. Other presets are available, see the php-cs-fixer docs.
+              "--rules=@PSR1", -- Formatting preset. Other presets are available, see the php-cs-fixer docs.
               "$FILENAME",
             },
             stdin = false,
